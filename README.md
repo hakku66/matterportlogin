@@ -62,7 +62,7 @@ This system provides secure, automated login to Matterport for team members with
 - If "Failed to fetch credentials" appears, check server IP, LAN connectivity, and that Apache is running
 - If fields are not found, inspect the page (right-click on input fields > Inspect) to find the correct selectors
 - Update the selectors in the script if Matterport changes their form structure
-
+- The script now checks both main document and iframes for login fields
 ### Security Notes
 - Credentials only exist in server memory and browser volatile memory
 - IP restrictions prevent external access

@@ -5,6 +5,7 @@
 // @description  Automatically inject credentials and login to Matterport
 // @author       MJ Designs
 // @match        https://my.matterport.com/login*
+// @include       https://my.matterport.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_log
 // ==/UserScript==
@@ -14,13 +15,34 @@
 
     console.log('Matterport Auto Login script loaded');
     GM_log('Matterport Auto Login script loaded');
-    debugger;
+    console.log('Iframes found:', document.querySelectorAll('iframe').length);
+    GM_log('Iframes found: ' + document.querySelectorAll('iframe').length);
+    // debugger;  // Removed - was for debugging
     // alert('Matterport Auto Login script loaded - check console for details');  // Removed - was for debugging
 
+    function findField(selector) {
+        // Check main document
+        let field = document.querySelector(selector);
+        if (field) return field;
+
+        // Check iframes
+        const iframes = document.querySelectorAll('iframe');
+        for (let iframe of iframes) {
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                field = doc.querySelector(selector);
+                if (field) return field;
+            } catch (e) {
+                // Cross-origin iframe, skip
+            }
+        }
+        return null;
+    }
+
     function injectCredentials() {
-        // Identify input fields using CSS selectors (more specific)
-        const emailField = document.querySelector('input[name="email"]') || document.querySelector('input[type="email"]');
-        const passwordField = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
+        // Identify input fields using CSS selectors (based on inspected HTML data-testid)
+        const emailField = findField('[data-testid="textfield_email"]') || findField('#email') || findField('input[name="email"]') || findField('input[type="email"]');
+        const passwordField = findField('[data-testid="textfield_password"]') || findField('#password') || findField('input[name="password"]') || findField('input[type="password"]');
 
         console.log('Email field found:', emailField);
         GM_log('Email field found: ' + emailField);
@@ -90,20 +112,21 @@
     }
 
     // Check immediately if fields are already loaded
-    const emailCheck = document.querySelector('input[name="email"]') || document.querySelector('input[type="email"]');
-    const passwordCheck = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
+    const emailCheck = findField('[data-testid="textfield_email"]') || findField('#email') || findField('input[name="email"]') || findField('input[type="email"]');
+    const passwordCheck = findField('[data-testid="textfield_password"]') || findField('#password') || findField('input[name="password"]') || findField('input[type="password"]');
     console.log('Initial check - Email:', emailCheck, 'Password:', passwordCheck);
     GM_log('Initial check - Email: ' + emailCheck + ' Password: ' + passwordCheck);
     if (emailCheck && passwordCheck) {
         console.log('Fields already present, injecting immediately');
+        GM_log('Fields already present, injecting immediately');
         injectCredentials();
         return;
     }
 
     // Use MutationObserver to handle dynamic loading of fields
     const observer = new MutationObserver(() => {
-        const emailObs = document.querySelector('input[name="email"]') || document.querySelector('input[type="email"]');
-        const passwordObs = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
+        const emailObs = findField('[data-testid="textfield_email"]') || findField('#email') || findField('input[name="email"]') || findField('input[type="email"]');
+        const passwordObs = findField('[data-testid="textfield_password"]') || findField('#password') || findField('input[name="password"]') || findField('input[type="password"]');
         console.log('Observer check - Email:', emailObs, 'Password:', passwordObs);
         GM_log('Observer check - Email: ' + emailObs + ' Password: ' + passwordObs);
         if (emailObs && passwordObs) {
@@ -118,8 +141,8 @@
     let attempts = 0;
     const fallbackCheck = setInterval(() => {
         attempts++;
-        const emailInt = document.querySelector('input[name="email"]') || document.querySelector('input[type="email"]');
-        const passwordInt = document.querySelector('input[name="password"]') || document.querySelector('input[type="password"]');
+        const emailInt = findField('[data-testid="textfield_email"]') || findField('#email') || findField('input[name="email"]') || findField('input[type="email"]');
+        const passwordInt = findField('[data-testid="textfield_password"]') || findField('#password') || findField('input[name="password"]') || findField('input[type="password"]');
         console.log('Interval check', attempts, '- Email:', emailInt, 'Password:', passwordInt);
         GM_log('Interval check ' + attempts + ' - Email: ' + emailInt + ' Password: ' + passwordInt);
         if (emailInt && passwordInt) {
