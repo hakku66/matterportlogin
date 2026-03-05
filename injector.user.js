@@ -4,8 +4,8 @@
 // @version      1.0
 // @description  Automatically inject credentials and login to Matterport
 // @author       MJ Designs
-// @match        https://my.matterport.com/login*
-// @include       https://my.matterport.com/*
+// @match        https://authn.matterport.com/login*
+// @include       https://authn.matterport.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_log
 // ==/UserScript==
@@ -81,7 +81,8 @@
 
                     // Auto-submit after 500ms
                     setTimeout(() => {
-                        const submitBtn = document.querySelector('button[type="submit"]') ||
+                        const submitBtn = findField('[data-testid="button_sign_in"]') ||
+                                         document.querySelector('button[type="submit"]') ||
                                          document.querySelector('button[data-testid*="login"]') ||
                                          Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.trim().toLowerCase().includes('sign in')) ||
                                          document.querySelector('input[type="submit"]');

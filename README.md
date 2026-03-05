@@ -16,8 +16,8 @@ This system provides secure, automated login to Matterport for team members with
 2. Copy the project files to `C:\xampp\htdocs\matterportlogin\` (or equivalent WAMP directory)
 3. Start Apache and MySQL services in XAMPP control panel
 4. Update `access.php`:
-   - Replace `'your_matterport_username'` with actual username
-   - Replace `'your_matterport_password'` with actual password
+   - Replace `'resi_access@mjdesigns.in'` with the actual Matterport account email
+   - Replace `'Mjdes!gns@2018'` with the actual Matterport account password
    - If your LAN uses different IP range, update `$allowed_ip_prefix`
 5. Update `injector.user.js`:
    - Replace `'http://192.168.1.100/access.php'` with your server's IP
