@@ -44,7 +44,7 @@ This system provides secure, automated login to Matterport for team members with
 3. Click the Tampermonkey icon in the browser toolbar and select "Dashboard"
 4. Click "Add a new script" (the + icon)
 5. Delete all the default code in the editor
-6. Copy the entire contents of `injector.user.js` from this repository
+6. Copy the entire contents of `injector.user.js` from this repository (the production build no longer contains any console or GM_log statements)
 7. Paste it into the Tampermonkey editor
 8. Click "File" > "Save" (or Ctrl+S)
 9. The script should now be active - verify it's enabled in the "Installed scripts" tab
@@ -59,10 +59,9 @@ This system provides secure, automated login to Matterport for team members with
 3. The userscript should automatically inject credentials and login
 4. If fields don't load immediately, the script waits using MutationObserver
 
-### Debugging
-- Open browser Developer Tools (F12) on the Matterport login page **before loading or refreshing** the page; otherwise early logs may be missed
-- In the Console tab make sure the log level filter is set to “All” and “Verbose” is enabled
-- If nothing appears in the page console, open the Tampermonkey dashboard and click the **Utilities → View logs** button; `GM_log` output and script errors show there
+### Debugging (production script is silent)
+- Although the production script is silent, errors will still surface in the console if something goes wrong (e.g. fetch failure)
+- Open browser Developer Tools (F12) on the Matterport login page **before loading or refreshing** the page
 - Check the URL shown in the address bar – if it isn’t exactly `https://my.matterport.com/login` (for example it’s embedded in an iframe or uses a different subdomain), adjust the `@match` pattern accordingly or add an `@include` for the real address
 - If "Failed to fetch credentials" appears, check server IP, LAN connectivity, and that Apache is running
 - If fields are not found, inspect the page (right-click on input fields > Inspect) to find the correct selectors
