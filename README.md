@@ -32,21 +32,36 @@ This system provides secure, automated login to Matterport for team members with
 2. Clicking "Launch Matterport Studio" opens the login page in new tab
 
 ### Step 4: Install and Configure Tampermonkey Script
-1. On each workstation, open Chrome/Firefox
-2. Install Tampermonkey extension if not already installed
-3. Open Tampermonkey dashboard → "Add a new script"
-4. Copy the contents of `injector.user.js` and paste
-5. Save the script
-6. **Obfuscate the script** (recommended for security):
-   - Use an online JavaScript obfuscator (e.g., javascriptobfuscator.com)
-   - Obfuscate the code and replace the script content
-   - This prevents easy reading via "Inspect Element"
+1. On each workstation, open Chrome or Firefox browser
+2. Install the Tampermonkey extension if not already installed:
+   - Chrome: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
+   - Firefox: https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/
+3. Click the Tampermonkey icon in the browser toolbar and select "Dashboard"
+4. Click "Add a new script" (the + icon)
+5. Delete all the default code in the editor
+6. Copy the entire contents of `injector.user.js` from this repository
+7. Paste it into the Tampermonkey editor
+8. Click "File" > "Save" (or Ctrl+S)
+9. The script should now be active - verify it's enabled in the "Installed scripts" tab
+10. **Obfuscate the script** (recommended for security):
+    - Use an online JavaScript obfuscator (e.g., javascriptobfuscator.com)
+    - Copy the obfuscated code and replace the script content in Tampermonkey
+    - This prevents easy reading via "Inspect Element"
 
 ### Step 5: Verify Functionality
 1. From a workstation, access the dashboard
 2. Click "Launch Matterport Studio"
 3. The userscript should automatically inject credentials and login
 4. If fields don't load immediately, the script waits using MutationObserver
+
+### Debugging
+- Open browser Developer Tools (F12) on the Matterport login page **before loading or refreshing** the page; otherwise early logs may be missed
+- In the Console tab make sure the log level filter is set to “All” and “Verbose” is enabled
+- If nothing appears in the page console, open the Tampermonkey dashboard and click the **Utilities → View logs** button; `GM_log` output and script errors show there
+- Check the URL shown in the address bar – if it isn’t exactly `https://my.matterport.com/login` (for example it’s embedded in an iframe or uses a different subdomain), adjust the `@match` pattern accordingly or add an `@include` for the real address
+- If "Failed to fetch credentials" appears, check server IP, LAN connectivity, and that Apache is running
+- If fields are not found, inspect the page (right-click on input fields > Inspect) to find the correct selectors
+- Update the selectors in the script if Matterport changes their form structure
 
 ### Security Notes
 - Credentials only exist in server memory and browser volatile memory
