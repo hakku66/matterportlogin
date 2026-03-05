@@ -11,8 +11,9 @@ header('Access-Control-Allow-Origin: https://my.matterport.com');
 header('Content-Type: application/json');
 
 // Store credentials in server-side variables (never in HTML)
-$username = 'resi_access@mjdesigns.in';  // Replace with actual username
-$password = 'Mjdes!gns@2018';  // Replace with actual password
+// ⚠️ SECURITY WARNING: Set these values locally only, never commit to git!
+$username = 'your_matterport_email@example.com';  // Replace with actual Matterport email
+$password = 'your_matterport_password';  // Replace with actual Matterport password
 
 // Output as JSON
 echo json_encode([

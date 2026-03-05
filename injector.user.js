@@ -60,7 +60,7 @@
         // Fetch credentials from local API using GM_xmlhttpRequest
         GM_xmlhttpRequest({
             method: 'GET',
-            url: 'http://192.168.1.100/access.php',  // Replace with your local server IP
+            url: 'http://192.168.2.49/matterportlogin/access.php',  // Updated IP: 192.168.2.49
             onload: function(response) {
                 console.log('Response received:', response.responseText);
                 GM_log('Response received: ' + response.responseText);
@@ -69,18 +69,36 @@
                     console.log('Credentials received, injecting...');
                     GM_log('Credentials received, injecting...');
 
-                    // Inject username
-                    emailField.value = data.username;
-                    emailField.dispatchEvent(new Event('input', { bubbles: true }));
-                    emailField.dispatchEvent(new Event('change', { bubbles: true }));
+                    // Sequentially focus and fill email then password to activate fields
+                    function fillSequentially() {
+                        // simulate user clicking into the field
+                        emailField.click();
+                        emailField.focus();
+                        // set value and fire input/change events so React sees it
+                        emailField.value = data.username;
+                        emailField.dispatchEvent(new InputEvent('input', { bubbles: true, data: data.username }));
+                        emailField.dispatchEvent(new Event('change', { bubbles: true }));
+                        emailField.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+                        emailField.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter' }));
+                        // blur to trigger validation
+                        emailField.dispatchEvent(new Event('blur', { bubbles: true }));
 
-                    // Inject password
-                    passwordField.value = data.password;
-                    passwordField.dispatchEvent(new Event('input', { bubbles: true }));
-                    passwordField.dispatchEvent(new Event('change', { bubbles: true }));
+                        setTimeout(() => {
+                            // simulate click+focus on password
+                            passwordField.click();
+                            passwordField.focus();
+                            passwordField.value = data.password;
+                            passwordField.dispatchEvent(new InputEvent('input', { bubbles: true, data: data.password }));
+                            passwordField.dispatchEvent(new Event('change', { bubbles: true }));
+                            passwordField.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+                            passwordField.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter' }));
+                            passwordField.dispatchEvent(new Event('blur', { bubbles: true }));
 
-                    // Auto-submit after 500ms
-                    setTimeout(() => {
+                            setTimeout(checkAndSubmit, 1000);
+                        }, 300);
+                    }
+
+                    function checkAndSubmit() {
                         const submitBtn = findField('[data-testid="button_sign_in"]') ||
                                          document.querySelector('button[type="submit"]') ||
                                          document.querySelector('button[data-testid*="login"]') ||
@@ -88,17 +106,29 @@
                                          document.querySelector('input[type="submit"]');
 
                         console.log('Submit button found:', submitBtn);
+                        console.log('Submit button disabled?', submitBtn ? submitBtn.disabled : 'N/A');
+                        console.log('Email aria-invalid:', emailField ? emailField.getAttribute('aria-invalid') : 'N/A');
+                        console.log('Password aria-invalid:', passwordField ? passwordField.getAttribute('aria-invalid') : 'N/A');
+                        
                         GM_log('Submit button found: ' + submitBtn);
+                        GM_log('Submit button disabled: ' + (submitBtn ? submitBtn.disabled : 'N/A'));
+                        GM_log('Email aria-invalid: ' + (emailField ? emailField.getAttribute('aria-invalid') : 'N/A'));
+                        GM_log('Password aria-invalid: ' + (passwordField ? passwordField.getAttribute('aria-invalid') : 'N/A'));
 
-                        if (submitBtn) {
+                        if (submitBtn && !submitBtn.disabled) {
                             console.log('Clicking submit button');
                             GM_log('Clicking submit button');
                             submitBtn.click();
+                        } else if (submitBtn && submitBtn.disabled) {
+                            console.log('Submit button still disabled');
+                            GM_log('Submit button still disabled');
                         } else {
                             console.log('Submit button not found');
                             GM_log('Submit button not found');
                         }
-                    }, 500);
+                    }
+
+                    fillSequentially();
 
                 } catch (e) {
                     console.error('Error parsing credentials:', e);

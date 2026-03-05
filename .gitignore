@@ -1,0 +1,20 @@
+# Credentials and sensitive files
+access.php
+*.env
+.env
+config.php
+credentials.php
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -3,6 +3,8 @@
 ## Overview
 This system provides secure, automated login to Matterport for team members without exposing credentials. It consists of a local PHP API, HTML dashboard, and Tampermonkey userscript.
 
+**⚠️ SECURITY:** Never commit credentials to git. Use `.gitignore` to prevent accidental exposure.
+
 ## Setup Guide
 
 ### Prerequisites
@@ -12,15 +14,18 @@ This system provides secure, automated login to Matterport for team members with
 - Matterport account credentials
 
 ### Step 1: Configure the Local Server
-1. Install XAMPP/WAMP on your server machine (e.g., IP: 192.168.1.100)
+1. Install XAMPP/WAMP on your server machine (note your server's LAN IP - e.g., `192.168.2.49`)
 2. Copy the project files to `C:\xampp\htdocs\matterportlogin\` (or equivalent WAMP directory)
 3. Start Apache and MySQL services in XAMPP control panel
-4. Update `access.php`:
-   - Replace `'resi_access@mjdesigns.in'` with the actual Matterport account email
-   - Replace `'Mjdes!gns@2018'` with the actual Matterport account password
-   - If your LAN uses different IP range, update `$allowed_ip_prefix`
+4. **⚠️ SECURITY: Configure credentials locally only (do NOT commit to git):**
+   - Edit `access.php` directly on the server machine
+   - Replace `'your_matterport_email@example.com'` with the actual Matterport account email
+   - Replace `'your_matterport_password'` with the actual Matterport account password
+   - The `.gitignore` file prevents this from being committed accidentally
 5. Update `injector.user.js`:
-   - Replace `'http://192.168.1.100/access.php'` with your server's IP
+   - Find your server's LAN IP (e.g., `ipconfig` in Windows command prompt, look for IPv4 address on your Ethernet adapter)
+   - Replace `'http://192.168.1.100/access.php'` with your server's IP and correct path
+   - **IMPORTANT**: Ensure the URL matches where you placed the files (if in `/C:/xampp/htdocs/matterportlogin/`, the URL should be `/matterportlogin/access.php`)
 
 ### Step 2: Test the API
 1. Access `http://192.168.1.100/matterportlogin/access.php` from a machine in the LAN
@@ -67,6 +72,8 @@ This system provides secure, automated login to Matterport for team members with
 - Credentials only exist in server memory and browser volatile memory
 - IP restrictions prevent external access
 - Obfuscated script prevents casual inspection
+- **Credentials are NOT committed to git** - `.gitignore` prevents accidental exposure
+- Configure credentials locally on each server only
 - No external services or email required
 
 ### Troubleshooting
