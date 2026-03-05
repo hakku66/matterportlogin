@@ -32,6 +32,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 10px;
         }
         button:hover {
             background-color: #0056b3;
@@ -42,13 +43,22 @@
             color: #007bff;
             margin-bottom: 20px;
         }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">MJ Designs</div>
         <h1>Team Portal</h1>
-        <button onclick="window.open('https://my.matterport.com/login', '_blank')">Launch Matterport Studio</button>
+        <!-- multiple launch buttons; new services can be added by duplicating the button element -->
+        <div class="buttons">
+            <button onclick="window.open('https://my.matterport.com/login', '_blank')">Launch Matterport Studio</button>
+            <button onclick="window.open('https://login.edozo.com/login', '_blank')">Launch Edozo Map</button>
+        </div>
     </div>
 </body>
 </html>

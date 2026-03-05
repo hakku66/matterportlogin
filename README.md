@@ -19,9 +19,18 @@ This system provides secure, automated login to Matterport for team members with
 3. Start Apache and MySQL services in XAMPP control panel
 4. **⚠️ SECURITY: Configure credentials locally only (do NOT commit to git):**
    - Edit `access.php` directly on the server machine
-   - Replace `'your_matterport_email@example.com'` with the actual Matterport account email
-   - Replace `'your_matterport_password'` with the actual Matterport account password
-   - The `.gitignore` file prevents this from being committed accidentally
+   - The file now supports multiple services; each has its own email/password pair.
+     e.g.:
+     ```php
+     if ($service === 'edozo') {
+         $username = 'edozo_user@example.com';
+         $password = 'edozo_secret';
+     } else {
+         $username = 'matterport_user@example.com';
+         $password = 'matterport_secret';
+     }
+     ```
+   - Be sure to set the values for **both** Edozo and Matterport since they are different logins.   - Adjust the `$allowed_ip_prefix` at the top of `access.php` to match your LAN subnet (e.g. `192.168.2.`) or remove the check during testing; a mismatched prefix causes an "Access denied" response instead of JSON.   - The `.gitignore` file prevents these values from being committed accidentally
 5. Update `injector.user.js`:
    - Find your server's LAN IP (e.g., `ipconfig` in Windows command prompt, look for IPv4 address on your Ethernet adapter)
    - Replace `'http://192.168.1.100/access.php'` with your server's IP and correct path
@@ -34,9 +43,15 @@ This system provides secure, automated login to Matterport for team members with
 
 ### Step 3: Deploy the Dashboard
 1. Team members access `http://192.168.1.100/matterportlogin/index.html`
-2. Clicking "Launch Matterport Studio" opens the login page in new tab
+2. The page presents buttons for each supported service. Currently:
+   * **Launch Matterport Studio** – opens Matterport login
+   * **Launch Edozo Map** – opens Edozo login
+3. Adding more services in the future is as simple as adding another `<button>` element in `index.html`; the userscript and API already support multiple services via the `service` query parameter.
 
 ### Step 4: Install and Configure Tampermonkey Script
+
+This script now supports multiple login pages (Matterport and Edozo). It detects the host and adds `?service=edozo` for Edozo or leaves it blank for Matterport, ensuring distinct credentials are fetched for each service.
+
 1. On each workstation, open Chrome or Firefox browser
 2. Install the Tampermonkey extension if not already installed:
    - Chrome: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
@@ -47,8 +62,9 @@ This system provides secure, automated login to Matterport for team members with
 6. Copy the entire contents of `injector.user.js` from this repository (the production build no longer contains any console or GM_log statements)
 7. Paste it into the Tampermonkey editor
 8. Click "File" > "Save" (or Ctrl+S)
-9. The script should now be active - verify it's enabled in the "Installed scripts" tab
-10. **Obfuscate the script** (recommended for security):
+9. The script will automatically detect whether it's running on Matterport or Edozo and fetch the correct credentials from your server
+10. The script should now be active - verify it's enabled in the "Installed scripts" tab
+11. **Obfuscate the script** (recommended for security):
     - Use an online JavaScript obfuscator (e.g., javascriptobfuscator.com)
     - Copy the obfuscated code and replace the script content in Tampermonkey
     - This prevents easy reading via "Inspect Element"
@@ -82,6 +98,6 @@ This system provides secure, automated login to Matterport for team members with
 - Check that Matterport login page selectors haven't changed (update CSS selectors if needed)
 
 ### Files
-- `access.php`: Secure credential API
+- `access.php`: Secure credential API (returns credentials for Matterport or Edozo depending on `?service=` parameter)
 - `index.html`: Team dashboard
-- `injector.user.js`: Tampermonkey injection script
+- `injector.user.js`: Tampermonkey injection script (handles multiple login domains)
