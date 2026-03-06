@@ -242,21 +242,6 @@ if [[ $# -eq 0 ]]; then
                 break
                 ;;
             2)
-                read -p "Enter remote host (IP or hostname): " remote_host
-                read -p "Enter username [default: $USER]: " remote_user
-                remote_user="${remote_user:-$USER}"
-                deploy_remote "$remote_host" "$remote_user"
-                break
-                ;;
-            3)
-                deploy_local
-                read -p "Enter remote host (IP or hostname): " remote_host
-                read -p "Enter username [default: $USER]: " remote_user
-                remote_user="${remote_user:-$USER}"
-                deploy_remote "$remote_host" "$remote_user"
-                break
-                ;;
-            4)
                 echo "Exiting."
                 exit 0
                 ;;
@@ -266,21 +251,17 @@ if [[ $# -eq 0 ]]; then
         esac
     done
 else
-    # Command line mode: deploy_remote <host> <user>
-    if [[ $1 == "local" ]]; then
+    # Command line mode: local only
+    if [[ $1 == "local" || $# -eq 0 ]]; then
         deploy_local
-    elif [[ $1 == "remote" && $# -ge 2 ]]; then
-        deploy_remote "$2" "${3:-$USER}"
     else
         echo "Usage (Windows):"
-        echo "  $0 [<export.zip>]           - Interactive mode"
+        echo "  $0 [<export.zip>]           - Interactive menu (local only)"
         echo "  $0 [<export.zip>] local     - Deploy to local Windows machine"
-        echo "  $0 [<export.zip>] remote <host> [user] - Deploy to remote Windows PC"
         echo ""
         echo "Examples:"
+        echo "  $0 local"
         echo "  $0 myexport.zip local"
-        echo "  $0 remote 192.168.2.50 Administrator"
-        echo "  $0 myexport.zip remote mypc.local myuser"
         exit 1
     fi
 fi

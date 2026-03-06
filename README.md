@@ -63,14 +63,7 @@ Usage examples:
 
 # specify an export zip (e.g. network share) and deploy locally
 ./deploy.sh \\192.168.2.199\resi\tampermonkey-script.zip local
-
-# deploy to remote machine via SSH
-./deploy.sh remote 192.168.2.50 Administrator
-
-# combine both
-./deploy.sh \\server\path\export.zip remote mypc.local myuser
 ```
-
 The script handles Windows paths, SSH, and UNC shares; it simply copies the `.user.js` into the Tampermonkey directory so that browsers will pick it up.  (It does **not** actually run Tampermonkey – the extension must be installed and running on the target machine.)
 
 ### Step 5: Verify Functionality
