@@ -50,6 +50,31 @@ This system provides secure, automated login to Matterport for team members with
 
 ### Step 4: Install and Configure Tampermonkey Script
 
+This repository also includes a convenience deployment script (`deploy.sh`) that can copy the `injector.user.js` file into local or remote Tampermonkey installations on Windows. Starting with v2 it also accepts a Tampermonkey export zip file as input and will unpack the `.user.js` automatically.
+
+Usage examples:
+
+```sh
+# interactive menu (Windows Git Bash, WSL, etc.)
+./deploy.sh
+
+# deploy local copy
+./deploy.sh local
+
+# specify an export zip (e.g. network share) and deploy locally
+./deploy.sh \\192.168.2.199\resi\tampermonkey-script.zip local
+
+# deploy to remote machine via SSH
+./deploy.sh remote 192.168.2.50 Administrator
+
+# combine both
+./deploy.sh \\server\path\export.zip remote mypc.local myuser
+```
+
+The script handles Windows paths, SSH, and UNC shares; it simply copies the `.user.js` into the Tampermonkey directory so that browsers will pick it up.  (It does **not** actually run Tampermonkey – the extension must be installed and running on the target machine.)
+
+### Step 5: Verify Functionality
+
 This script now supports multiple login pages (Matterport and Edozo). It detects the host and adds `?service=edozo` for Edozo or leaves it blank for Matterport, ensuring distinct credentials are fetched for each service.
 
 1. On each workstation, open Chrome or Firefox browser

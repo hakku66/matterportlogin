@@ -12,6 +12,14 @@ if [[ "$OSTYPE" != "msys" && "$OSTYPE" != "win32" && "$OSTYPE" != "cygwin" ]]; t
     exit 1
 fi
 
+# Allow the caller to specify a Tampermonkey export zip as the first argument. If a file is
+# provided and it exists, unpack the .user.js from it later and shift the arguments.
+if [[ $# -ge 1 && -f "$1" ]]; then
+    EXPORT_ZIP="$1"
+    shift
+fi
+
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_FILE="$SCRIPT_DIR/injector.user.js"
 SCRIPT_NAME="injector.user.js"
@@ -21,6 +29,23 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# If a Tampermonkey export zip was provided, unpack it to obtain the .user.js
+if [[ -n "$EXPORT_ZIP" ]]; then
+    if [[ ! -f "$EXPORT_ZIP" ]]; then
+        echo -e "${RED}Error: Export zip not found: $EXPORT_ZIP${NC}"
+        exit 1
+    fi
+
+    echo -e "${YELLOW}Unpacking Tampermonkey export: $EXPORT_ZIP${NC}"
+    TMPDIR=$(mktemp -d)
+    # extract the first .user.js file we find
+    unzip -p "$EXPORT_ZIP" "*.user.js" > "$TMPDIR/$SCRIPT_NAME" || {
+        echo -e "${RED}Failed to extract .user.js from zip${NC}"
+        exit 1
+    }
+    SOURCE_FILE="$TMPDIR/$SCRIPT_NAME"
+fi
 
 # Check if source file exists
 if [[ ! -f "$SOURCE_FILE" ]]; then
@@ -102,7 +127,29 @@ deploy_local() {
             ((deployed++))
         fi
     fi
-    
+
+    # Offer to install the Tampermonkey extension itself by creating an external-update manifest
+    read -p "Would you like to install/enable the Tampermonkey Chrome/Edge extension? [y/N] " install_ext
+    if [[ "$install_ext" =~ ^[Yy] ]]; then
+        echo -e "${YELLOW}Creating external extension manifests...${NC}"
+        local external_dir="$APPDATA/Local/Google/Chrome/User Data/Default/External Extensions"
+        mkdir -p "$external_dir"
+        cat <<EOF > "$external_dir/$chrome_tampermonkey_id.json"
+{"external_update_url":"https://clients2.google.com/service/update2/crx"}
+EOF
+        echo -e "${GREEN}✓ Chrome manifest created: $external_dir/$chrome_tampermonkey_id.json${NC}"
+        ((deployed++))
+
+        local edge_external="$APPDATA/Local/Microsoft/Edge/User Data/Default/External Extensions"
+        mkdir -p "$edge_external"
+        local edge_id="iikmkjmpaadaobahmlepeloendndfohd"
+        cat <<EOF > "$edge_external/$edge_id.json"
+{"external_update_url":"https://clients2.google.com/service/update2/crx"}
+EOF
+        echo -e "${GREEN}✓ Edge manifest created: $edge_external/$edge_id.json${NC}"
+        ((deployed++))
+    fi
+
     echo ""
     echo -e "${GREEN}Deployment Summary: $deployed location(s) updated${NC}"
 }
@@ -140,6 +187,20 @@ deploy_remote() {
         scp "$SOURCE_FILE" "$user@$host:$(cygpath -u "$APPDATA")/Local/Microsoft/Edge/User\\ Data/Default/Extensions/iikmkjmpaadaobahmlepeloendndfohd/$SCRIPT_NAME" 2>/dev/null && \
             echo -e "${GREEN}✓ Deployed to Edge extension${NC}" || echo -e "${YELLOW}⚠ Edge deployment optional${NC}"
         
+        # ask remote user whether to create external extension manifests (only SSH path works)
+        read -p "Create external extension manifests on remote? [y/N] " remote_ext
+        if [[ "$remote_ext" =~ ^[Yy] ]]; then
+            echo "";
+            echo -e "${YELLOW}Creating external extension manifests on remote machine...${NC}"
+            # chrome
+            ssh "$user@$host" "mkdir -p '%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\External Extensions' && \
+                echo {\"external_update_url\":\"https://clients2.google.com/service/update2/crx\"} > '%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\External Extensions\\gcbommkclmclpchlhjekmpleeacaggo.json'"
+            echo -e "${GREEN}✓ Chrome manifest created on remote${NC}"
+            # edge
+            ssh "$user@$host" "mkdir -p '%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\External Extensions' && \
+                echo {\"external_update_url\":\"https://clients2.google.com/service/update2/crx\"} > '%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\External Extensions\\iikmkjmpaadaobahmlepeloendndfohd.json'"
+            echo -e "${GREEN}✓ Edge manifest created on remote${NC}"
+        fi
     else
         # Try UNC path (network share)
         echo "SSH not available. Using UNC path..."
@@ -160,15 +221,13 @@ deploy_remote() {
     echo -e "${GREEN}✓ Remote deployment to $user@$host complete${NC}"
 }
 
-# Main menu
+# Main menu (local only)
 show_menu() {
     echo "Select deployment option:"
     echo "1) Deploy to local Windows machine"
-    echo "2) Deploy to remote Windows PC (SSH or UNC)"
-    echo "3) Deploy to both local and remote"
-    echo "4) Exit"
+    echo "2) Exit"
     echo ""
-    read -p "Enter choice [1-4]: " choice
+    read -p "Enter choice [1-2]: " choice
 }
 
 # Parse command line arguments
@@ -214,13 +273,14 @@ else
         deploy_remote "$2" "${3:-$USER}"
     else
         echo "Usage (Windows):"
-        echo "  $0                    - Interactive mode"
-        echo "  $0 local              - Deploy to local Windows machine"
-        echo "  $0 remote <host> [user] - Deploy to remote Windows PC"
+        echo "  $0 [<export.zip>]           - Interactive mode"
+        echo "  $0 [<export.zip>] local     - Deploy to local Windows machine"
+        echo "  $0 [<export.zip>] remote <host> [user] - Deploy to remote Windows PC"
         echo ""
         echo "Examples:"
+        echo "  $0 myexport.zip local"
         echo "  $0 remote 192.168.2.50 Administrator"
-        echo "  $0 remote mypc.local myuser"
+        echo "  $0 myexport.zip remote mypc.local myuser"
         exit 1
     fi
 fi
