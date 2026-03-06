@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Multi‑Service Auto Login
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Automatically inject credentials for Matterport and Edozo logins
 // @author       MJ Designs
 // @match        https://authn.matterport.com/login*
@@ -47,6 +47,54 @@
             };
         }
     }
+    function disableChromePasswordSave() {
+        // Aggressive Chrome password save prevention for Edozo
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.setAttribute('autocomplete', 'off');
+            form.setAttribute('data-form-type', 'other');
+        });
+
+        // Add hidden dummy fields to confuse Chrome's password manager
+        const dummyFields = [
+            { name: 'chrome-off-1', value: Math.random().toString(36) },
+            { name: 'chrome-off-2', value: Math.random().toString(36) }
+        ];
+
+        dummyFields.forEach(field => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = field.name;
+            input.value = field.value;
+            input.style.display = 'none';
+            input.setAttribute('autocomplete', 'off');
+            document.body.appendChild(input);
+        });
+
+        // Override form submission to clear fields immediately
+        document.addEventListener('submit', (e) => {
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.setAttribute('autocomplete', 'off');
+                });
+            }, 100);
+        }, true);
+
+        // Prevent Chrome's credential manager from detecting login forms
+        const style = document.createElement('style');
+        style.textContent = `
+            input[type="password"] {
+                -webkit-text-security: disc !important;
+                -webkit-appearance: none !important;
+            }
+            form {
+                -webkit-user-select: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     function injectCredentials() {
         const { email: emailSel, password: pwdSel, isEdozo } = getSelectors();
@@ -55,6 +103,11 @@
         const emailField = findField(emailSel);
         const passwordField = findField(pwdSel);
         if (!emailField || !passwordField) return;
+
+        // Apply aggressive Chrome password save prevention for Edozo
+        if (isEdozo) {
+            disableChromePasswordSave();
+        }
 
         GM_xmlhttpRequest({
             method: 'GET',
